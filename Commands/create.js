@@ -8,6 +8,7 @@ const Embed = require("../Util/Embed");
 const { Emojis } = require("../Util/EmojiManager");
 const DiscordReal = require("discord.js");
 const Jimp = require("jimp");
+const { checkPermissions } = require("../Util/util");
 
 module.exports = {
     data: new jsh.commandBuilder()
@@ -29,6 +30,11 @@ module.exports = {
      * @param {Client} client 
      */
     async execute(interaction, client) {
+        //Check perms
+        const Perms = await checkPermissions("MANAGE_EMOJIS_AND_STICKERS", interaction);
+        //Make sure it does not execute the command
+        if(!Perms) return;
+
         //Get the EmojiURL
         let EmojiURL = interaction.options.getString("url");
         //Check if its supposed to be round
