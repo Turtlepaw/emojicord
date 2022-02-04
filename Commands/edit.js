@@ -112,7 +112,7 @@ module.exports = {
             const MappedFilters = [];
             let i;
             for(const filter of filters){
-                MappedFilters.push(`${i == filters.length ? Emojis.reply_1.show : Emojis.stem_1.show} ${fixText(filter)}`);
+                MappedFilters.push(`${i == filters.length ? Emojis.reply_1.show : Emojis.stem_1.show} \`${filter}\``);
             };
 
             return new Embed()
