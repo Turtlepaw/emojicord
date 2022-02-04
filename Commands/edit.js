@@ -110,9 +110,10 @@ module.exports = {
          */
         function buildDefualtEmbed(filters=[]){
             const MappedFilters = [];
-            let i;
+            let i = 1;
             for(const filter of filters){
                 MappedFilters.push(`${i == filters.length ? Emojis.reply_1.show : Emojis.stem_1.show} \`${filter}\``);
+                i++
             };
 
             return new Embed()
