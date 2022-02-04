@@ -14,7 +14,7 @@ module.exports.scopes = ["bot", "applications.commands"];
 /**
  * @type {Discord.PermissionString[]}
  */
-module.exports.permissions = ["MANAGE_EMOJIS_AND_STICKERS", "EMBED_LINKS", "USE_EXTERNAL_EMOJIS"];
+module.exports.permissions = ["MANAGE_EMOJIS_AND_STICKERS", "EMBED_LINKS", "USE_EXTERNAL_EMOJIS", "CREATE_INSTANT_INVITE"];
 /**
  * Creates an InviteURL
  * @param {Client} client 
