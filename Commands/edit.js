@@ -49,6 +49,13 @@ module.exports = {
         //Check to make sure they used the autocomplete
         if(!Emoji) return errorMessage(`Emoji not found`, interaction);
 
+        const EmojiFilters = {
+            "ROUND": "ROUND",
+            "NAME": "NAME",
+            "GREYSCALE": "GREYSCALE"
+        };
+        const EmojiFilterDef = "ROUND" || "NAME" || "GREYSCALE";
+
         //Create embeds and componenets
         const BaseOptions = new DiscordReal.MessageSelectMenu()
         .setCustomId("edit_options")
@@ -56,24 +63,24 @@ module.exports = {
         .setPlaceholder(`Select an option to edit the emoji`)
         .setOptions([
             {
-                label: `Re-color Emoji`,
-                value: `RECOLOR`,
+                label: `Greyscale`,
+                value: EmojiFilters.GREYSCALE,
                 emoji: Emojis.paint_dc.show
             },
             {
                 label: `Round Emoji`,
-                value: `ROUND`,
+                value: EmojiFilters.ROUND,
                 emoji: Emojis.online_dc.show
             },
             {
                 label: `Change name`,
-                value: `NAME`,
+                value: EmojiFilters.NAME,
                 emoji: Emojis.search_dc.show
             },
             {
-                label: `Change roles`,
-                value: `ROLES`,
-                emoji: Emojis.role_dc.show
+                label: `Save`,
+                value: `SAVE`,
+                emoji: Emojis.download_dc.show
             },
             {
                 label: `Exit`,
@@ -95,14 +102,6 @@ module.exports = {
             .addComponents(DisOptions)
         ];
 
-        const EmojiFilters = {
-            "ROLES": "ROLES",
-            "ROUND": "ROUND",
-            "RECOLOR": "RECOLOR",
-            "NAME": "NAME"
-        };
-        const EmojiFilterDef = "ROLES" || "ROUND" || "RECOLOR" || "NAME";
-
         /**
          * Builds the default embed.
          * @param {EmojiFilterDef[]} filters The filters applied to the emoji
@@ -110,9 +109,10 @@ module.exports = {
          */
         function buildDefualtEmbed(filters=[]){
             const MappedFilters = [];
-            let i;
+            let i = 1;
             for(const filter of filters){
                 MappedFilters.push(`${i == filters.length ? Emojis.reply_1.show : Emojis.stem_1.show} \`${filter}\``);
+                i++
             };
 
             return new Embed()
@@ -123,9 +123,24 @@ module.exports = {
             .addField(`${Emojis.dev_dc.show} ID & Emoji`, `${Emojis.stem_1.show} \`${Emoji}\`\n${Emojis.reply_1.show} \`${Emoji.id}\``)
             .addField(`${Emojis.star_dc.show} Filters`, `${filters.length >= 1 ? MappedFilters.join(`\n`) : "\`No filters applied\`"}`)
         }
+
+        /**
+         * Creates a payload with an image.
+         * @param {EmojiFilterDef[]} Filters 
+         * @param {Buffer} Image 
+         */
+        function createPayload(Filters, Image, CustomEmbed=null){
+            return {
+                embeds: (CustomEmbed || buildDefualtEmbed(Filters)).setThumbnail(`attachment://emoji.png`).build(),
+                files: [
+                    new MessageAttachment(Image, "emoji.png")
+                ]
+            }
+        }
         
         const EndEmbed = new Embed()
-        .setTitle(`${Emojis.delete_dc.show} | Edit emoji menu closed`);
+        .setTitle(`${Emojis.delete_dc.show} | Edit emoji menu closed`)
+        .setDescription(`You closed the emoji editing menu`);
 
         //Send the message
         /**
@@ -161,33 +176,42 @@ module.exports = {
         });
 
         const Filters = [];
+        const JimpImage = await Jimp.read(Emoji.url);
+        JimpImage.resize(512, 512);        
 
         collector.on("collect", async i => {
             async function cancel(){
                 return await update();
             }
 
-            async function update(Embed=BaseEmbed, componenets=Rows, forceNoBuild=false, fetchReply=true){
-                if(i.replied) return interaction.editReply({
-                    embeds: forceNoBuild == true ? Embed : Embed.build(),
-                    components: componenets,
-                    fetchReply
-                });
-
-                return await i.update({
-                    embeds: forceNoBuild == true ? Embed : Embed.build(),
-                    components: componenets,
-                    fetchReply
-                });
+            async function update(EmbedOrPayload=BaseEmbed, componenets=Rows, forceNoBuild=false, fetchReply=true){
+                if(EmbedOrPayload?.color != null){
+                    if(i.replied) return interaction.editReply({
+                        embeds: forceNoBuild == true ? EmbedOrPayload : EmbedOrPayload.build(),
+                        components: componenets,
+                        fetchReply
+                    });
+    
+                    return await i.update({
+                        embeds: forceNoBuild == true ? EmbedOrPayload : EmbedOrPayload.build(),
+                        components: componenets,
+                        fetchReply
+                    });
+                } else {
+                    if(i.replied) return interaction.editReply(EmbedOrPayload);
+    
+                    return await i.update(EmbedOrPayload);
+                }
             }
             const val = i.values[0];
 
             if(val == "EXIT"){
                 await i.update({
                     embeds: EndEmbed.build(),
-                    components: RowsDisabled
+                    components: RowsDisabled,
+                    files: []
                 });
-            } if(val == "NAME"){
+            } else if(val == EmojiFilters.NAME){
                 await update(new Embed().setTitle(`${Emojis.clock_dc.show} | Awaiting text`).setDescription(`Send the new Emoji name!`))
                 const Message = await collect(i.channel);
 
@@ -198,6 +222,33 @@ module.exports = {
                 Filters.push(EmojiFilters.NAME);
 
                 await update(buildDefualtEmbed(Filters));
+            } else if(val == EmojiFilters.GREYSCALE){
+                JimpImage.greyscale()
+
+                Filters.push(EmojiFilters.GREYSCALE)
+
+                await update(createPayload(Filters, await JimpImage.getBufferAsync(Jimp.MIME_PNG)));
+            } else if(val == EmojiFilters.ROUND){
+                const mask = await Jimp.read("./Images/circle-mask.png");
+
+                JimpImage.mask(mask, 0, 0);
+                
+                Filters.push(EmojiFilters.ROUND)
+
+                await update(createPayload(Filters, await JimpImage.getBufferAsync(Jimp.MIME_PNG)));
+            } else if(val == "SAVE"){
+                const PNG = await JimpImage.getBufferAsync(Jimp.MIME_PNG);
+                
+                const NewEmoji = await interaction.guild.emojis.create(PNG, `${Emoji.name}_edited`, {
+                    reason: `${interaction.user.tag} (${interaction.user.id}) Saved this emoji`
+                });
+
+                await update(createPayload(Filters, PNG, new Embed().setTitle(`${Emojis.download_dc.show} | Saved the emoji`).setDescription(`The saved emoji has been created!`).addField(`${Emojis.emoji_dc.show} Emoji`, `${Emojis.stem_1.show} \`${NewEmoji}\`\n${Emojis.reply_1.show} \`${NewEmoji.id}\``)));
+
+                await interaction.editReply({
+                    components: RowsDisabled,
+                    files: []
+                });
             }
         });
     }

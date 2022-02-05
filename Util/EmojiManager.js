@@ -38,7 +38,7 @@ module.exports = async (client) => {
         }
     });
 
-    fs.writeFileSync(`../emojis.json`, JSON.stringify(file));
+    fs.writeFileSync(`./emojis.json`, JSON.stringify(file));
 };
 
 module.exports.Emojis = require("../emojis.json");
