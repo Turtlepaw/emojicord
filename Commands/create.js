@@ -143,7 +143,7 @@ module.exports = {
 
         //If no emoji URL provided the interaction will be replied to.
         //So we check if it was replied to.
-        if(interaction.replied){
+        if(!interaction.replied){
             await interaction.editReply(payload);
         } else {
             await interaction.reply(payload);
