@@ -35,6 +35,8 @@ module.exports = {
         //Make sure it does not execute the command
         if(!Perms) return;
 
+        await interaction.deferReply();
+
         //Get the EmojiURL
         let EmojiURL = interaction.options.getString("url");
         //Check if its supposed to be round
@@ -51,7 +53,7 @@ module.exports = {
 
                 if (!attachmentOrURL.endsWith(".png") && !attachmentOrURL.endsWith(".jpg") && !attachmentOrURL.endsWith(".jpeg") && !attachmentOrURL.endsWith(".gif")) {
                     //This executes if its not a valid emoji fileAZ
-                    int.followUp({
+                    int.editReply({
                         embeds: new Embed()
                             .setTitle(`${Emojis.xmark_dc.show} | Invalid attachment`)
                             .setDescription(`The attachment/image you provided is invalid. It must be a \`.png\`, \`.jpg\`, \`.jpeg\`, or \`.gif\`!`)
@@ -65,7 +67,7 @@ module.exports = {
                 //Check file type
                 if (!attachmentOrURL.url.endsWith(".png") && !attachmentOrURL.url.endsWith(".jpg") && !attachmentOrURL.url.endsWith(".jpeg") && !attachmentOrURL.url.endsWith(".gif")) {
                     //This executes if its not a valid emoji fileAZ
-                    int.followUp({
+                    int.editReply({
                         embeds: new Embed()
                             .setTitle(`${Emojis.xmark_dc.show} | Invalid attachment`)
                             .setDescription(`The attachment/image you provided is invalid. It must be a \`.png\`, \`.jpg\`, \`.jpeg\`, or \`.gif\`!`)
@@ -81,7 +83,7 @@ module.exports = {
         //Check if the user provided the URL already
         if (EmojiURL == null) {
             //Reply to them asking for their file
-            await interaction.reply({
+            await interaction.editReply({
                 embeds: new Embed()
                     .setTitle(`${Emojis.message_dc.show} | Awaiting files`)
                     .setDescription(`Please send the emoji as a file to upload!`)
@@ -141,12 +143,9 @@ module.exports = {
                 .build(),
         };
 
-        //If no emoji URL provided the interaction will be replied to.
-        //So we check if it was replied to.
-        if(interaction.replied){
-            await interaction.editReply(payload);
-        } else {
-            await interaction.reply(payload);
-        }
+        //~~If no emoji URL provided the interaction will be replied to.~~
+        //~~So we check if it was replied to.~~
+        //Added deferReply() so we need to edit it
+        await interaction.editReply(payload);
     }
 }
