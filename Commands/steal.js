@@ -64,6 +64,8 @@ module.exports = {
             EmojiURL = BaseURL.replace("{ID}", EmojiID).replace(`{type}`, Options.a ? `gif` : `png`);
         } else if((Type || getType()) == EmojiTypes.ID){
             type = EmojiTypes.ID
+            const EmojiID = Options.EmojiID;
+            EmojiURL = BaseURL.replace("{ID}", EmojiID).replace(`{type}`, Options.a ? `gif` : `png`);
         }
 
         const UploadedEmoji = await int.guild.emojis.create(EmojiURL, Options.Name, {
