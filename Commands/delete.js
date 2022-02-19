@@ -8,7 +8,6 @@ const { errorMessage, checkPermissions, fixText } = require("../Util/util");
 const { generateDefualtFilter, FilterTypes } = require("../Config/config");
 
 module.exports = {
-    devOnly: true,
     data: new jsh.commandBuilder()
         .setName(`delete`)
         .setDescription(`Delete an emoji`)
